@@ -9,7 +9,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: rgb(45, 26, 62);
+        background-color: rgb(33, 26, 56);
       }
       canvas {
         width: 600px;
@@ -24,6 +24,7 @@
   <script type="module">
     const { instance } = await WebAssembly.instantiateStreaming(fetch('./life.wasm'));
     const init = instance.exports.init;
+    const update = instance.exports.update;
 
     const width = 32;   // canvas width in cells
     const height = 32;  // canvas height in cells
@@ -54,8 +55,12 @@
       ctx.putImageData(imageData, 0, 0);
     }
 
-    const currAddr = init();
+    let currAddr = init();
     render(currAddr);
+    setInterval(() => {
+      currAddr = update(currAddr);
+      render(currAddr);
+    }, 200);
   </script>
 </body>
 </html>
