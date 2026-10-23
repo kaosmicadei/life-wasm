@@ -20,11 +20,12 @@
     global.get $ptr_a
     local.set $base_addr
 
-    ;; --- Add a blinker in the middle of the board. ---
+    ;; --- Draw the blinker ---
     ;;         #
     ;;  ### -> # -> ### and back
     ;;         #
 
+    ;; Add a blinker in the middle of the board.
     ;; Compute the center of the board.
     global.get $width
     global.get $height
@@ -63,6 +64,57 @@
     
     i32.const 1
     i32.store8
+
+    ;; --- Draw the glider ---
+    ;;
+    ;;     #
+    ;;      #
+    ;;    ###
+    
+    ;; draw the first row
+    local.get $base_addr
+    i32.const 1
+    i32.add
+    i32.const 1
+    i32.store8 offset=10
+
+    ;; draw the second row
+    local.get $base_addr
+    global.get $width
+    i32.const 2
+    i32.add
+    i32.add
+    i32.const 1
+    i32.store8 offset=10
+
+    ;; draw the third row
+    local.get $base_addr
+    global.get $width
+    i32.const 2
+    i32.mul
+    i32.add
+    i32.const 1
+    i32.store8 offset=10
+
+    local.get $base_addr
+    global.get $width
+    i32.const 2
+    i32.mul
+    i32.add
+    i32.const 1
+    i32.add
+    i32.const 1
+    i32.store8 offset=10
+
+    local.get $base_addr
+    global.get $width
+    i32.const 2
+    i32.mul
+    i32.add
+    i32.const 2
+    i32.add
+    i32.const 1
+    i32.store8 offset=10
 
     ;; Return the base address of the current state buffer.
     local.get $base_addr
