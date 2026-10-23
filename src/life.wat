@@ -11,113 +11,21 @@
   (global $ptr_a (mut i32) (i32.const 0))
   (global $ptr_b (mut i32) (i32.const 1024))  ;; 32x32 cells, 1 byte per cell
 
+  (func $add_cell (param $row i32) (param $col i32)
+      local.get $row
+      global.get $width
+      i32.mul
+      local.get $col
+      i32.add
+      global.get $ptr_a
+      i32.add
+      i32.const 1
+      i32.store8
+  )
+
   ;; Initialises the game board and returns the address of the current state buffer.
   (func $init (result i32)
-    (local $cell_idx i32)
-
-    (local $base_addr i32)
-
     global.get $ptr_a
-    local.set $base_addr
-
-    ;; --- Draw the blinker ---
-    ;;         #
-    ;;  ### -> # -> ### and back
-    ;;         #
-
-    ;; Add a blinker in the middle of the board.
-    ;; Compute the center of the board.
-    global.get $width
-    global.get $height
-    i32.mul              ;; total cells = width * height
-    i32.const 2
-    i32.div_u            ;; half board
-    ;; subtract half the width to get the center cell index
-    global.get $width
-    i32.const 2
-    i32.div_u
-    i32.sub
-    
-    ;; Set the center cell as alive (1).
-    local.tee $cell_idx
-    local.get $base_addr
-    i32.add
-    i32.const 1
-    i32.store8
-
-    ;; Set the left cell of the blinker as alive (1).
-    local.get $cell_idx
-    local.get $base_addr
-    i32.const -1
-    i32.add
-    i32.add               ;; ptr_a[cell_idx - 1]
-
-    i32.const 1
-    i32.store8
-
-    ;; Set the right cell of the blinker as alive (1).
-    local.get $cell_idx
-    local.get $base_addr
-    i32.const 1
-    i32.add
-    i32.add               ;; ptr_a[cell_idx + 1]
-    
-    i32.const 1
-    i32.store8
-
-    ;; --- Draw the glider ---
-    ;;
-    ;;     #
-    ;;      #
-    ;;    ###
-    
-    ;; draw the first row
-    local.get $base_addr
-    i32.const 1
-    i32.add
-    i32.const 1
-    i32.store8 offset=10
-
-    ;; draw the second row
-    local.get $base_addr
-    global.get $width
-    i32.const 2
-    i32.add
-    i32.add
-    i32.const 1
-    i32.store8 offset=10
-
-    ;; draw the third row
-    local.get $base_addr
-    global.get $width
-    i32.const 2
-    i32.mul
-    i32.add
-    i32.const 1
-    i32.store8 offset=10
-
-    local.get $base_addr
-    global.get $width
-    i32.const 2
-    i32.mul
-    i32.add
-    i32.const 1
-    i32.add
-    i32.const 1
-    i32.store8 offset=10
-
-    local.get $base_addr
-    global.get $width
-    i32.const 2
-    i32.mul
-    i32.add
-    i32.const 2
-    i32.add
-    i32.const 1
-    i32.store8 offset=10
-
-    ;; Return the base address of the current state buffer.
-    local.get $base_addr
   )
 
   ;; cell[row][col - 1] -> idx - 1 + (idx % width == 0 ? width : 0)
@@ -393,5 +301,6 @@
   )
 
   (export "init" (func $init))
+  (export "add_cell" (func $add_cell))
   (export "update" (func $update))
 )

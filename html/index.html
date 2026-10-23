@@ -24,6 +24,7 @@
   <script type="module">
     const { instance } = await WebAssembly.instantiateStreaming(fetch('./life.wasm'));
     const init = instance.exports.init;
+    const addCell = instance.exports.add_cell;
     const update = instance.exports.update;
 
     const width = 32;   // canvas width in cells
@@ -55,7 +56,20 @@
       ctx.putImageData(imageData, 0, 0);
     }
 
+    const glider = [
+              [2, 7],
+                      [3, 8],
+      [4, 6], [4, 7], [4, 8]
+    ];
+
+    const toad = [
+              [3, 22], [3, 23], [3, 24],
+      [4, 21], [4, 22], [4, 23]
+    ];
+
     let currAddr = init();
+    glider.forEach(([row, col]) => addCell(row, col));
+    toad.forEach(([row, col]) => addCell(row, col));
     render(currAddr);
     setInterval(() => {
       currAddr = update(currAddr);
