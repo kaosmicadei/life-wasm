@@ -28,7 +28,7 @@
     global.get $ptr_a
   )
 
-  ;; cell[row][col - 1] -> idx - 1 + (idx % width == 0 ? width : 0)
+  ;; cell[row][(col + width - 1) % width] -> idx - 1 + (idx % width == 0 ? width : 0)
   (func $move_left (param $idx i32) (result i32)
     local.get $idx
     i32.const 1

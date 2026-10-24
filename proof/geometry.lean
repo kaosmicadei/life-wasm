@@ -52,3 +52,37 @@ theorem moveLeftCorrect (w : Nat) (hw : 0 < w) (idx : Nat) :
       have h6 : idx % w - 1 < idx % w := Nat.sub_lt h2 (by trivial)
       rw [Nat.mod_eq_of_lt (Nat.lt_trans h6 h5)]
       omega
+
+def moveRightSpec (w : Nat) (idx : Nat) : Nat :=
+  let row := idx / w
+  let col := idx % w
+  row * w + (col + 1) % w
+
+def moveRightImpl (w : Nat) (idx : Nat) : Nat :=
+  idx + 1 - (if (idx + 1) % w == 0 then w else 0)
+
+theorem moveRightCorrect (w : Nat) (hw : 1 < w) (idx : Nat) :
+  moveRightImpl w idx = moveRightSpec w idx := by
+  unfold moveRightImpl moveRightSpec
+  simp only [beq_iff_eq]
+  have hw0 : 0 < w := Nat.lt_of_succ_lt hw
+  have hr : idx % w < w := Nat.mod_lt idx hw0
+  have hle : idx % w ≤ idx := Nat.mod_le idx w
+  have hidx: idx / w * w = idx - idx % w := by
+    rw [Nat.mul_comm, ← Nat.add_left_cancel_iff (n := (idx % w))]
+    rw [Nat.mod_add_div, Nat.add_comm, Nat.sub_add_cancel hle]
+  have hadd : (idx + 1) % w = (idx % w + 1) % w := by
+    rw [Nat.add_mod, Nat.mod_eq_of_lt hw]
+  by_cases hc : idx % w + 1 = w
+  . have hcond : (idx + 1) % w = 0 := by rw [hadd, hc, Nat.mod_self]
+    have hspec : (idx % w + 1) % w = 0 := by rw [hc, Nat.mod_self]
+    rw [ite_eq_left hcond, hspec, hidx]
+    omega
+  . -- idx % w + 1 ≠ w
+    have hlt : idx % w + 1 < w := by omega
+    have hcond : (idx + 1) % w ≠ 0 := by
+      rw [hadd, Nat.mod_eq_of_lt hlt]
+      omega
+    have hspec : (idx % w + 1) % w = idx % w + 1 := by rw [Nat.mod_eq_of_lt hlt]
+    rw [ite_eq_right hcond, hspec, hidx]
+    omega
