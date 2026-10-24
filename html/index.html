@@ -33,7 +33,7 @@
     // For zero-copy access, we use two buffer to hold the state of the game: one for the current
     // state and one for the next state.
     const memory = new Uint8Array(instance.exports.memory.buffer, 0, 2 * width * height);
-    window.memory = memory;
+
     const canvas = document.getElementById('game-of-life');
     const ctx = canvas.getContext('2d');
 
