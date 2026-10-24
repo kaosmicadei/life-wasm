@@ -35,13 +35,16 @@
     i32.sub
 
     ;; Ternary condition
-    global.get $width     ;; a: cond == 0
-    i32.const 0           ;; b: cond != 0
+    global.get $width     ;; a: cond != 0
+    i32.const 0           ;; b: cond == 0
 
     ;; condition
+    ;; Since the width is fixed to 32 and 32 is a power of 2, we can replace the
+    ;; modulo operation with width by bitwise AND
+    ;; idx % 32 == idx & 31
     local.get $idx
-    global.get $width
-    i32.rem_u
+    i32.const 31
+    i32.and
     i32.eqz
 
     select               ;; condition ? a : b
@@ -56,15 +59,18 @@
     i32.add
 
     ;; Ternary condition
-    global.get $width     ;; a: cond == 0
-    i32.const 0           ;; b: cond != 0
+    global.get $width     ;; a: cond != 0
+    i32.const 0           ;; b: cond == 0
 
     ;; condition
+    ;; Since the width is fixed to 32 and 32 is a power of 2, we can replace the
+    ;; modulo operation with width by bitwise AND
+    ;; (idx + 1) % 32 == (idx + 1) & 31
     local.get $idx
     i32.const 1
     i32.add
-    global.get $width
-    i32.rem_u
+    i32.const 31
+    i32.and
     i32.eqz
 
     select               ;; condition ? a : b
@@ -92,10 +98,8 @@
     (local $below_cell_idx i32)
 
     ;; Auxiliary variables for neighbour computations.
-    (local $aux1 i32)
-    (local $aux2 i32)
     (local $sum i32)
-    (local $state i32)
+    (local $is_alive i32)  ;; 0 -> dead, 1 -> alive
 
     ;; Copy the current state buffer addresses into local variables.
     global.get $ptr_a
@@ -131,7 +135,7 @@
     ;; * A live cell with 2 or 3 live neighbors survives.
     ;; * A dead cell with exactly 3 live neighbors becomes alive.
     ;; * All other cells die or remain dead.
-    (loop $update
+    (loop $main
       ;; --- Compute the sum of live neighbors for the current cell. ---
 
       ;; Initialise the sum of live neighbors to 0.
@@ -240,7 +244,6 @@
       local.get $cell_idx
       i32.add
       i32.load8_u
-      local.tee $state
 
       local.get $sum
       i32.const 2
@@ -253,30 +256,50 @@
       i32.eq
       
       i32.or            ;; ((state && sum == 2) || sum == 3)
-      local.set $state
+      local.set $is_alive
 
       local.get $write_addr
       local.get $cell_idx
       i32.add
-      local.get $state
+      local.get $is_alive
       i32.store8
       
 
       ;; --- Increment the cell indices. ---
       ;; Using periodic boundary conditions, increment the cell indices with 
-      ;; wrap-around,  (idx + 1) % total_cells
+      ;; wrap-around,  (idx + 1) % total_cells. However, since division is an
+      ;; expensive operation, we replace it with the ternary operator:
+      ;; (idx + 1) % total_cells  ->  (idx + 1 == total_cells ? 0 : idx + 1)
       local.get $above_cell_idx
       i32.const 1
       i32.add
+      local.set $above_cell_idx
+      
+      i32.const 0               ;; a: cond != 0
+      local.get $above_cell_idx ;; b: cond == 0
+
+      ;; condition
+      local.get $above_cell_idx
       local.get $total_cells
-      i32.rem_u
+      i32.eq
+
+      select
       local.set $above_cell_idx
 
       local.get $below_cell_idx
       i32.const 1
       i32.add
+      local.set $below_cell_idx
+
+      i32.const 0               ;; a: cond != 0
+      local.get $below_cell_idx ;; b: cond == 0
+
+      ;; condition
+      local.get $below_cell_idx
       local.get $total_cells
-      i32.rem_u
+      i32.eq
+
+      select
       local.set $below_cell_idx
 
       ;; loop index
@@ -287,7 +310,7 @@
       local.tee $cell_idx
       local.get $total_cells
       i32.lt_u
-      br_if $update
+      br_if $main
     )
 
     ;; --- Swap the pointers to the current and previous state buffers. ---
