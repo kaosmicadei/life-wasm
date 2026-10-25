@@ -22,11 +22,8 @@ index shifts directly using the following formulas.
 * Left shift: idx - 1 + (if idx % w == 0 then w else 0)
 * Right shift: idx + 1 - (if (idx + 1) % w == 0 then w else 0)
 
-In this file, we prove that both representations of the left and right shifts
-are equivalent.
-
-NOTE: In the `life.wat` file, we used a fixed size of `w = 32`. Since 32 is a
-power of two, we can replace the module operation by a bit wise AND, `& 31`.
+This file contains the proof that both representations of the left and right
+shifts are equivalent.
 -/
 
 def moveLeftSpec (w : Nat) (idx : Nat) : Nat :=
