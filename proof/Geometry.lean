@@ -50,7 +50,7 @@ theorem moveLeftCorrect (w idx : Nat) (hw : 0 < w) :
   -- have `row = idx / w`. We then have `row * w = idx - idx % w`.
   have hrow : idx / w * w = idx - idx % w := by
     rw [Nat.mul_comm, ← Nat.add_left_cancel_iff (n := idx % w),
-        Nat.mod_add_div, Nat.add_comm, Nat.sub_add_cancel hle]
+        Nat.mod_add_div, Nat.add_sub_cancel' hle]
   -- Now we can proceed with the case analysis on idx % w.
   by_cases h : idx % w = 0
   . -- idx % w = 0
@@ -94,7 +94,7 @@ theorem moveRightCorrect (w idx : Nat) (hw : 1 < w) :
   -- have `row = idx / w`. We then have `row * w = idx - idx % w`.
   have hrow : idx / w * w = idx - idx % w := by
     rw [Nat.mul_comm, ← Nat.add_left_cancel_iff (n := idx % w),
-        Nat.mod_add_div, Nat.add_comm, Nat.sub_add_cancel hle]
+        Nat.mod_add_div, Nat.add_sub_cancel' hle]
   -- Now we can proceed with the case analysis on (idx + 1) % w.
   --
   -- Although we are analyzing (idx + 1) % w, it is more convenient to express
