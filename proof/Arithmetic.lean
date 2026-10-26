@@ -10,18 +10,22 @@ This file contains the proof of equivalence between the modulus operation and
 the bitwise AND operation for when `w = 2 ^ k`.
 -/
 
-def periodicBoundarySpec (idx w : Nat) : Nat := idx % w
+def periodicBoundarySpec (w idx : Nat) : Nat := idx % w
 
-def periodicBoundaryImpl (idx w : Nat) : Nat := idx &&& (w - 1)
+def periodicBoundaryImpl (w idx : Nat) : Nat := idx &&& (w - 1)
 
-theorem periodicBoundaryCorrect (idx w : Nat) (hw : ∃ k, w = 2 ^ k) :
-  periodicBoundarySpec idx w = periodicBoundaryImpl idx w := by
+theorem periodicBoundaryCorrect (w idx : Nat) (hw : ∃ k, w = 2 ^ k) :
+  periodicBoundarySpec w idx = periodicBoundaryImpl w idx := by
   unfold periodicBoundarySpec periodicBoundaryImpl
   obtain ⟨k, rfl⟩ := hw
   -- Two numbers are equal if all their bits are equal.
   apply Nat.eq_of_testBit_eq
   intro i
-  rw [Nat.testBit_mod_two_pow,      -- x % 2^k is the same as selecting the bits i < k of x.
-      Nat.testBit_and,              -- (x &&& y).testBit i = (x.testBit i && y.testBit i)
-      Nat.testBit_two_pow_sub_one]  -- (2^k - 1) have all the bits i < k set to 1
-  exact Bool.and_comm _ _
+  -- x % 2^k is the same as selecting the bits i < k of x where x[i] = 1.
+  rw [Nat.testBit_mod_two_pow]
+  -- Take a bit i from x & y is the same as taking the bit i from x and
+  -- the bit i from y and performing a logical AND.
+  rw [Nat.testBit_and]
+  -- (2^k - 1) have all the bits i < k set to 1
+  rw [Nat.testBit_two_pow_sub_one]
+  rw [Bool.and_comm]

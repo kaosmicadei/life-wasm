@@ -26,15 +26,15 @@ This file contains the proof that both representations of the left and right
 shifts are equivalent.
 -/
 
-def moveLeftSpec (w : Nat) (idx : Nat) : Nat :=
+def moveLeftSpec (w idx : Nat) : Nat :=
   let row := idx / w
   let col := idx % w
   row * w + (col + w - 1) % w
 
-def moveLeftImpl (w : Nat) (idx : Nat) : Nat :=
+def moveLeftImpl (w idx : Nat) : Nat :=
   idx + (if idx % w == 0 then w else 0) - 1
 
-theorem moveLeftCorrect (w : Nat) (hw : 0 < w) (idx : Nat) :
+theorem moveLeftCorrect (w idx : Nat) (hw : 0 < w) :
   moveLeftImpl w idx = moveLeftSpec w idx := by
   unfold moveLeftImpl moveLeftSpec
   simp?
@@ -71,15 +71,15 @@ theorem moveLeftCorrect (w : Nat) (hw : 0 < w) (idx : Nat) :
     rw [ite_eq_right h, hcol, hrow]
     omega
 
-def moveRightSpec (w : Nat) (idx : Nat) : Nat :=
+def moveRightSpec (w idx : Nat) : Nat :=
   let row := idx / w
   let col := idx % w
   row * w + (col + 1) % w
 
-def moveRightImpl (w : Nat) (idx : Nat) : Nat :=
+def moveRightImpl (w idx : Nat) : Nat :=
   idx + 1 - (if (idx + 1) % w == 0 then w else 0)
 
-theorem moveRightCorrect (w : Nat) (hw : 1 < w) (idx : Nat) :
+theorem moveRightCorrect (w idx : Nat) (hw : 1 < w) :
   moveRightImpl w idx = moveRightSpec w idx := by
   unfold moveRightImpl moveRightSpec
   simp?
