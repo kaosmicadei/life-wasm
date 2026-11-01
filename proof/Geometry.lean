@@ -26,76 +26,98 @@ This file contains the proof that both representations of the left and right
 shifts are equivalent.
 -/
 
+
+/- --- Useful lemmas --- -/
+
+theorem div_mul (a b : Nat) : a / b * b = a - a % b := by
+  have hle : a % b ≤ a := Nat.mod_le a b
+  rw [Nat.mul_comm, ← Nat.add_left_cancel_iff (n := a % b),
+      Nat.add_sub_cancel' hle, Nat.mod_add_div]
+
+/--
+2D coordinate for a cell in the grid.
+-/
+structure Coord where
+  row : Nat
+  col : Nat
+
+/--
+Converts a linear index `idx` into a 2D coordinate `Coord` for a grid of width `w`.
+-/
+def Coord.ofIndex (w idx : Nat) : Coord := { row := idx / w, col := idx % w }
+
+
+/- --- Move left --- -/
+
+/--
+Original specification for moving left in a 2D grid with periodic boundary conditions.
+-/
 def moveLeftSpec (w idx : Nat) : Nat :=
-  let row := idx / w
-  let col := idx % w
+  let ⟨row, col⟩ := Coord.ofIndex w idx
   row * w + (col + w - 1) % w
 
+/--
+Implementation for moving left in a 2D grid with periodic boundary conditions using
+linear indexing.
+-/
 def moveLeftImpl (w idx : Nat) : Nat :=
   idx + (if idx % w == 0 then w else 0) - 1
 
+/--
+Proof that specification and implementation for moving left are equivalent.
+-/
 theorem moveLeftCorrect (w idx : Nat) (hw : 0 < w) :
   moveLeftImpl w idx = moveLeftSpec w idx := by
-  unfold moveLeftImpl moveLeftSpec
-  simp?
+  unfold moveLeftImpl moveLeftSpec Coord.ofIndex
+  simp
   -- Because of the if-else structure, we need to consider two cases:
   -- when idx % w = 0 and when idx % w ≠ 0.
-  --
-  -- Before that, let's define some helpful lemmas that will be used
-  -- in both cases.
-  --
-  -- From the definition of modulus operation:
-  have hle : idx % w ≤ idx := Nat.mod_le idx w
-  -- From the definition of `row` in `moveLeftSpec` and the modulus operation, we
-  -- have `row = idx / w`. We then have `row * w = idx - idx % w`.
-  have hrow : idx / w * w = idx - idx % w := by
-    rw [Nat.mul_comm, ← Nat.add_left_cancel_iff (n := idx % w),
-        Nat.mod_add_div, Nat.add_sub_cancel' hle]
-  -- Now we can proceed with the case analysis on idx % w.
   by_cases h : idx % w = 0
   . -- idx % w = 0
     -- From the definition of `col` in `moveLeftSpec`, we have `col = idx % w`.
     -- Since `idx % w = 0` and `w - 1 < w`, we have:
     have hcol : (idx % w + w - 1) % w = w - 1 := by rw [h]; simp?
-    rw [ite_eq_left h, hcol, hrow, h]
+    rw [ite_eq_left h, hcol, div_mul idx w, h]
     omega
   . -- idx % w ≠ 0
     -- From the definition of the modulus operation:
-    have hiw : idx % w < w := Nat.mod_lt idx hw
+    have hle : idx % w ≤ idx := Nat.mod_le idx w
+    have hlt : idx % w < w := Nat.mod_lt idx hw
     -- From the definition of `col` in `moveLeftSpec`, we have `col = idx % w`.
     -- For `idx % w ≠ 0`, we have `col = idx % w` and `col - 1 = idx % w - 1`.
     have hcol : (idx % w + w - 1) % w = idx % w - 1 := by
       rw [Nat.add_comm, Nat.add_sub_assoc (by omega), Nat.add_mod]
       simp
-      rw [Nat.mod_eq_of_lt (by omega)] -- uses hiw
-    rw [ite_eq_right h, hcol, hrow]
-    omega
+      rw [Nat.mod_eq_of_lt (by omega)] -- requires hlt
+    rw [ite_eq_right h, hcol, div_mul idx w]
+    omega -- requires hle
 
+
+/- --- Move right --- -/
+
+/--
+Original specification for moving right in a 2D grid with periodic boundary conditions.
+-/
 def moveRightSpec (w idx : Nat) : Nat :=
-  let row := idx / w
-  let col := idx % w
+  let ⟨row, col⟩ := Coord.ofIndex w idx
   row * w + (col + 1) % w
 
+/--
+Implementation for moving right in a 2D grid with periodic boundary conditions using
+linear indexing.
+-/
 def moveRightImpl (w idx : Nat) : Nat :=
   idx + 1 - (if (idx + 1) % w == 0 then w else 0)
 
-theorem moveRightCorrect (w idx : Nat) (hw : 1 < w) :
+/--
+Proof that specification and implementation for moving right are equivalent.
+-/
+theorem moveRightCorrect (w idx : Nat) (hw : 0 < w) :
   moveRightImpl w idx = moveRightSpec w idx := by
-  unfold moveRightImpl moveRightSpec
-  simp?
+  unfold moveRightImpl moveRightSpec Coord.ofIndex
+  simp
   -- Because of the if-else structure, we need to consider two cases:
   -- when idx % w = 0 and when idx % w ≠ 0.
-  --
-  -- Before that, let's define some helpful lemmas that will be used
-  -- in both cases.
-  -- From the definition of modulus operation:
-  have hle : idx % w ≤ idx := Nat.mod_le idx w
-  -- From the definition of `row` in `moveLeftSpec` and the modulus operation, we
-  -- have `row = idx / w`. We then have `row * w = idx - idx % w`.
-  have hrow : idx / w * w = idx - idx % w := by
-    rw [Nat.mul_comm, ← Nat.add_left_cancel_iff (n := idx % w),
-        Nat.mod_add_div, Nat.add_sub_cancel' hle]
-  -- Now we can proceed with the case analysis on (idx + 1) % w.
   --
   -- Although we are analyzing (idx + 1) % w, it is more convenient to express
   -- it as `idx % w + 1`. That is because `idx % w + 1` is a bit easier for omega
@@ -105,16 +127,16 @@ theorem moveRightCorrect (w idx : Nat) (hw : 1 < w) :
     -- Recovering the original condition for the if-else statement.
     have hcond : (idx + 1) % w = 0 := by
       rw [Nat.add_mod, show (idx % w + 1 % w) % w = 0 from by simp [h]]
-    rw [ite_eq_left hcond, hrow]
+    rw [ite_eq_left hcond, div_mul idx w]
     omega
   . -- idx % w + 1 ≠ w
-    have h0w : 0 < w := Nat.lt_of_succ_lt hw
-    have hiw : idx % w < w := Nat.mod_lt idx h0w
-    have hlt : idx % w + 1 < w := by omega  -- uses hiw and h
-    have hadd : (idx + 1) % w = (idx % w + 1) % w := by rw [Nat.add_mod]; simp?
+    have hle : idx % w ≤ idx := Nat.mod_le idx w
+    have hmod_lt : idx % w < w := Nat.mod_lt idx hw
+    have hmod_add_lt : idx % w + 1 < w := by omega  -- requires hmod_lt and h
+    have hadd : (idx + 1) % w = (idx % w + 1) % w := by rw [Nat.mod_add_mod]
     -- Recovering the condition for the if-else statement in this case.
-    have hcond : (idx + 1) % w ≠ 0 := by rw [hadd, Nat.mod_eq_of_lt hlt]; omega
+    have hcond : (idx + 1) % w ≠ 0 := by rw [hadd, Nat.mod_eq_of_lt hmod_add_lt]; omega
     -- Lemma for reducing the modulus when the value is less than w.
-    have hredux : (idx % w + 1) % w = idx % w + 1 := by rw [Nat.mod_eq_of_lt hlt]
-    rw [ite_eq_right hcond, hrow, hadd, hredux]
-    omega
+    have hredux : (idx % w + 1) % w = idx % w + 1 := by rw [Nat.mod_eq_of_lt hmod_add_lt]
+    rw [ite_eq_right hcond, div_mul idx w, hadd, hredux]
+    omega -- requires hle
