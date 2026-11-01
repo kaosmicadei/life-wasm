@@ -1,0 +1,9 @@
+name = "proof"
+version = "0.1.0"
+defaultTargets = ["Arithmetic", "Geometry"]
+
+[[lean_lib]]
+name = "Arithmetic"
+
+[[lean_lib]]
+name = "Geometry"

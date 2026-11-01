@@ -2,3 +2,6 @@
 
 # binary files
 *.wasm
+
+# Lean build artifacts
+.lake
