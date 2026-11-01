@@ -76,7 +76,7 @@ theorem moveLeftCorrect (w idx : Nat) (hw : 0 < w) :
   . -- idx % w = 0
     -- From the definition of `col` in `moveLeftSpec`, we have `col = idx % w`.
     -- Since `idx % w = 0` and `w - 1 < w`, we have:
-    have hcol : (idx % w + w - 1) % w = w - 1 := by rw [h]; simp?
+    have hcol : (idx % w + w - 1) % w = w - 1 := by rw [h]; simp
     rw [ite_eq_left h, hcol, div_mul idx w, h]
     omega
   . -- idx % w ≠ 0
